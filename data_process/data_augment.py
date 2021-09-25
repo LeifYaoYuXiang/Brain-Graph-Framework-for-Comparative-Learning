@@ -8,6 +8,7 @@ from tqdm import trange
 config = ConfigParser()
 config.read('../parameters.ini', encoding='UTF-8')
 
+
 # 将相关的nii文件加载进来
 def load_nifti(filepath):
     nifti = nib.load(filepath)

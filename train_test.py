@@ -13,12 +13,15 @@ from util_deep_learning import save_model, save_net_state_dict
 
 
 # 特征提取
+from util_visualization import display_matrix_2d
+
+
 def train_test_pretune(
         n_epoch, model,
-        gcn_optimizer, gcn_loss_fcn, encoder_scheduler,
+        encoder_optimizer, encoder_loss_fcn, encoder_scheduler,
         train_loader_list, train_loader2_list,
         unaug_train_loader_list, unaug_test_loader_list,
-        save_model_epoch_number, model_save_dir, cv_time):
+        save_model_epoch_number, model_save_dir, cv_time, alpha):
 
     dur = []
     encoder_loss_record = []
@@ -42,7 +45,7 @@ def train_test_pretune(
         unaug_test_loader_this_epoch = load_data_loaders_from_pkl(unaug_test_loader_path_this_epoch)
         ml_train_dataloader = unaug_train_loader_this_epoch + train_loader_this_epoch + train_loader2_this_epoch
 
-        encoder_loss = train_encoder(model, gcn_optimizer, gcn_loss_fcn, train_loader_this_epoch, train_loader2_this_epoch)
+        encoder_loss = train_encoder(model, encoder_optimizer, encoder_loss_fcn, train_loader_this_epoch, train_loader2_this_epoch, alpha)
         lr_model = train_ml_model(model, lr_model, ml_train_dataloader)
         dur.append(time.time() - t0)
 
@@ -105,14 +108,13 @@ def train_test_finetune(
 
 
 # 用于训练编码器
-def train_encoder(gcn_model, optimizer, loss_fcn, train_loader, train_loader2):
+def train_encoder(gcn_model, optimizer, loss_fcn, train_loader, train_loader2, alpha):
     # 必备，将模型设置为训练模式
     gcn_model.train()
     loss_total = 0
 
     for i in range(len(train_loader)):
         # 编辑输入值
-
 
         # 图一
         graph_info1 = train_loader[i]
@@ -129,7 +131,6 @@ def train_encoder(gcn_model, optimizer, loss_fcn, train_loader, train_loader2):
         adj_label1 = get_A_r(adj1, 2)
         loss_Ncontrast_1 = Ncontrast(x_dis_1, adj_label1, tau=1)
 
-
         # 图二
         graph_info2 = train_loader2[i]
         graph_node_features2 = graph_info2['batch_graph'].ndata['feat'].to(torch.float32)
@@ -145,16 +146,13 @@ def train_encoder(gcn_model, optimizer, loss_fcn, train_loader, train_loader2):
         adj_label2 = get_A_r(adj2, 2)
         loss_Ncontrast_2 = Ncontrast(x_dis_2, adj_label2, tau=1)
 
-
         # 计算损失函数
         total_node_number = logits1.size(0)
         embeddings = torch.cat((logits1, logits2))
         indices = torch.arange(total_node_number)
         label = torch.cat((indices, indices))
 
-        alpha1 = alpha2 = 1
-
-        loss = loss_fcn(embeddings, label) + alpha1 * loss_Ncontrast_1 + alpha2 * loss_Ncontrast_2
+        loss = loss_fcn(embeddings, label) + alpha * loss_Ncontrast_1 + alpha * loss_Ncontrast_2
 
         optimizer.zero_grad()
         loss.backward()
@@ -200,6 +198,8 @@ def test_using_ml(gcn_model, ml_model, test_loader):
             input = (graph_node_features, graph, batch_size)
             embedding = gcn_model.get_embedding(input)
             logits = torch.from_numpy(ml_model.predict(embedding.numpy()))
+            # for shape_index in range(embedding.shape[0]):
+            #     display_matrix_2d(embedding[shape_index].reshape(246, -1)*100)
             if i == 0:
                 indices_record = logits
                 batch_y_record = graph_batch_label

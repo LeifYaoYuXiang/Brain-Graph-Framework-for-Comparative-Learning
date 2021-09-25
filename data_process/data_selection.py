@@ -144,7 +144,3 @@ def ml_reappearance():
         acc = model.score(test_data_set, test_label_set)
         print(acc)
 
-
-if __name__ == '__main__':
-    # data_choose_optimization(try_number=200)
-    ml_reappearance()

@@ -39,31 +39,34 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 # 超参数设置
 @ex.config
 def hyper_parameters_config():
-    gcn_layers = 5
-    drop_out = 0.7
+    n_layers = 5
+    drop_out = 0.5
     nt_xent_loss_temperature = 0.1
     adam_learning_rate = 1e-3
     adam_weight_decay = 5e-4
-    n_epoch = 60
-    n_hidden = 32
+    n_epoch = 80
+    n_hidden = 64
     step_size = 10
     gamma = 0.5
+    alpha = 0
     seed = 1029
-    save_model_epoch_number = 60
+    save_model_epoch_number = 79
+    pooling_type = 'sum'
 
 
 # Entry
 @ex.automain
-def main(_run, gcn_layers, n_hidden, drop_out, nt_xent_loss_temperature,
+def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
          adam_learning_rate, adam_weight_decay,
          n_epoch,
-         step_size, gamma,
+         step_size, gamma, alpha, pooling_type,
          seed, save_model_epoch_number):
 
     config = ConfigParser()
     config.read('parameters.ini', encoding='UTF-8')
     # 设置随机数种子
     seed_torch(seed)
+
     cv_number = config.getint('experiment', 'cv_number')
     dataloader_dir = config.get('filepath', 'dataloader_dir')
     model_save_dir = config.get('filepath', 'model_save_dir')
@@ -75,11 +78,23 @@ def main(_run, gcn_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     train2_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[2]  # train 2: no_aug_ratio_sample
     unaug_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[0]
 
+    gcin_config_dic = {
+        'n_layers': n_layers,
+        'n_hidden': n_hidden,
+        'drop_out': drop_out,
+        'nt_xent_loss_temperature': nt_xent_loss_temperature,
+        'alpha': alpha,
+        'adam_learning_rate': adam_learning_rate,
+        'adam_weight_decay': adam_weight_decay,
+        'step_size': step_size,
+        'gamma': gamma,
+        'pooling_type': pooling_type,
+    }
     # # 特征提取
     pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
-             cv_number, n_epoch,
-             gcn_layers, n_hidden, drop_out, nt_xent_loss_temperature,
-             adam_learning_rate, adam_weight_decay, step_size, gamma,
+             cv_number, n_epoch, gcin_config_dic,
+             # n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
+             # adam_learning_rate, adam_weight_decay, step_size, gamma,
              save_model_epoch_number, model_save_dir)
 
     # # 微调

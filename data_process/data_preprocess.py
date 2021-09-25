@@ -97,7 +97,6 @@ def generate_data_in_one_epoch(data, label, id, batch_size):
 
 
 def gcl_data_preprocess(voxel_to_bold, bold_to_fc, base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size):
-
     voxel_to_bold_to_fc = voxel_to_bold + '_' + bold_to_fc
     voxel_to_bold_to_fc_path = os.path.join(save_dir, voxel_to_bold_to_fc)
     os.mkdir(voxel_to_bold_to_fc_path)
@@ -109,7 +108,6 @@ def gcl_data_preprocess(voxel_to_bold, bold_to_fc, base_dir, maximum_epoch_numbe
         os.mkdir(voxel_to_bold_to_fc_cv_number_train_path)
         voxel_to_bold_to_fc_cv_number_test_path = os.path.join(voxel_to_bold_to_fc_cv_number_path, 'test')
         os.mkdir(voxel_to_bold_to_fc_cv_number_test_path)
-
 
         train_index = cv_info[cv_number]['train_file_id']
         test_index = cv_info[cv_number]['test_file_id']
