@@ -56,6 +56,9 @@ def save_sacred_metric(_run, metric_name, data_list):
         _run.log_scalar(metric_name, data_list[j], j)
 
 
+# 利用
+
+
 # Early Stopping: 防止过拟合
 class EarlyStopping:
     def __init__(self, patience=10):

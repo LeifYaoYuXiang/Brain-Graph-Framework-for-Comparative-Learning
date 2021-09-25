@@ -31,14 +31,13 @@ subject_id = '6001'
 number = '0.txt'
 
 type = 'no_aug_no_aug'
-mat = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
-display_matrix_2d(mat)
+mat1 = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
+display_matrix_3d(mat1)
 
-type = 'aug_ratio_sample'
-mat = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
-display_matrix_2d(mat)
+subject_id = '6392'
+mat2 = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
+display_matrix_3d(mat2)
 
-
-type = 'no_aug_slide_window'
-mat = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
-display_matrix_2d(mat)
+mat_minus = abs(mat1-mat2)
+mat_minus[mat_minus < 1] = 0
+display_matrix_3d(mat_minus)

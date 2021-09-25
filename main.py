@@ -44,12 +44,12 @@ def hyper_parameters_config():
     nt_xent_loss_temperature = 0.1
     adam_learning_rate = 1e-3
     adam_weight_decay = 5e-4
-    n_epoch = 100
+    n_epoch = 60
     n_hidden = 32
     step_size = 10
     gamma = 0.5
     seed = 1029
-    save_model_epoch_number = 23
+    save_model_epoch_number = 60
 
 
 # Entry
@@ -110,7 +110,7 @@ def main(_run, gcn_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     #              cv_number, n_epoch, alpha=5, tau=1.0, order=2, n_hidden=64, drop_out=0.6, adam_learning_rate=adam_learning_rate,
     #              step_size=step_size, gamma=gamma)
     #
-    # # 对比试验： VGAE
+    # # 对比试验： VGAE-FCNN
     # vgae_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #            cv_number, n_epoch,
     #            adam_learning_rate=adam_learning_rate, step_size=step_size, gamma=gamma)
@@ -120,8 +120,5 @@ def main(_run, gcn_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     #            cv_number, n_epoch,
     #            adam_learning_rate=adam_learning_rate, step_size=step_size, gamma=gamma)
 
+    # # 对比试验： GraphCL
 
-    # 对比试验: Brain_GNN
-
-
-    # 对比试验: Structure2Vec
