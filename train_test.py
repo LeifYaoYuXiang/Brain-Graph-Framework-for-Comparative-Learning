@@ -198,8 +198,6 @@ def test_using_ml(gcn_model, ml_model, test_loader):
             input = (graph_node_features, graph, batch_size)
             embedding = gcn_model.get_embedding(input)
             logits = torch.from_numpy(ml_model.predict(embedding.numpy()))
-            # for shape_index in range(embedding.shape[0]):
-            #     display_matrix_2d(embedding[shape_index].reshape(246, -1)*100)
             if i == 0:
                 indices_record = logits
                 batch_y_record = graph_batch_label

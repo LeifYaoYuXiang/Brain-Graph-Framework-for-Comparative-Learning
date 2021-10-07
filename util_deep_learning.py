@@ -56,7 +56,16 @@ def save_sacred_metric(_run, metric_name, data_list):
         _run.log_scalar(metric_name, data_list[j], j)
 
 
-# 利用
+# 将运行得到的数据加以保存并存储到txt文件中
+def save_list_into_file(data_list, filepath):
+    np.savetxt(filepath, data_list)
+
+
+# 计算一组数据的均值和标准差
+def calculate_mean_and_standard_variance(data_list):
+    arr_mean = np.mean(data_list)
+    arr_std = np.std(data_list, ddof=1)
+    return arr_mean, arr_std
 
 
 # Early Stopping: 防止过拟合

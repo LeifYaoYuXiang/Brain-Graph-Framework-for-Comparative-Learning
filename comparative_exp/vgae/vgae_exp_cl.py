@@ -6,7 +6,7 @@ from torch.optim import lr_scheduler
 
 from comparative_exp.train_test_exp import comparative_test_exp
 from comparative_exp.vgae.vgae_network_cl import VGAEModel_CL
-from util_deep_learning import save_sacred_metric
+from util_deep_learning import save_sacred_metric, calculate_mean_and_standard_variance
 
 
 def vgae_exp_cl(_run, dataloader_dir, loader_type,
@@ -48,3 +48,6 @@ def vgae_exp_cl(_run, dataloader_dir, loader_type,
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
     save_sacred_metric(_run, 'CL_VGAE_AvgAcc', avg_acc)
+
+    arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
+    print('CL_VGAE_Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))

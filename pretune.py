@@ -7,13 +7,14 @@ from torch.optim import lr_scheduler
 # 自定义模块
 from network import GCN, GIN
 from train_test import train_test_pretune
-from util_deep_learning import save_sacred_metric
+from util_deep_learning import save_sacred_metric, calculate_mean_and_standard_variance
 
 
 def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
             cv_number, n_epoch, config_dic,
             save_model_epoch_number, model_save_dir):
     avg_acc = []
+    avg_loss = []
 
     for i in range(cv_number):
         print('第'+str(i+1)+'次训练开始')
@@ -85,10 +86,19 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
 
         if i == 0:
             avg_acc = np.array(acc_record)
+            avg_loss = np.array(encoder_loss_record)
         else:
             avg_acc = avg_acc + np.array(acc_record)
+            avg_loss = avg_loss + np.array(encoder_loss_record)
 
     # 保存平均值
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
-    save_sacred_metric(_run, 'AvgAcc', avg_acc)
+    save_sacred_metric(_run, 'Average Accuracy', avg_acc)
+
+    avg_loss = avg_loss / cv_number
+    avg_loss = avg_loss.tolist()
+    save_sacred_metric(_run, 'Average Loss', avg_loss)
+
+    arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
+    print('Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))

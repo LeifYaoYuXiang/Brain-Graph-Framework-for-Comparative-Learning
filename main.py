@@ -93,22 +93,21 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     # # 特征提取
     pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
              cv_number, n_epoch, gcin_config_dic,
-             # n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
-             # adam_learning_rate, adam_weight_decay, step_size, gamma,
              save_model_epoch_number, model_save_dir)
 
-    # # 微调
+    # 微调
     # finetune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
     #          cv_number, n_epoch,
     #          adam_learning_rate, adam_weight_decay, step_size, gamma,
     #          model_save_dir)
+
     #
     # # 对比试验: GCN
     # gcn_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #            cv_number, n_epoch,
     #            gcn_layers, n_hidden, drop_out, adam_learning_rate, step_size, gamma)
 
-    # # 对比实验: GAT
+    # 对比实验: GAT
     # gat_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #            cv_number, n_epoch,
     #            gat_layers=5, n_hidden=8, drop_out=drop_out,

@@ -11,7 +11,7 @@ from comparative_exp.graph_mlp.utils import get_A_r, Ncontrast
 
 from data_process.data_preprocess import load_data_loaders_from_pkl
 from train_test import acc_score, f1_score, precision_metric, recall_metric
-from util_deep_learning import save_sacred_metric
+from util_deep_learning import save_sacred_metric, calculate_mean_and_standard_variance
 
 
 def gmlp_exp_cl(_run, dataloader_dir, loader_type,
@@ -119,3 +119,6 @@ def gmlp_exp_cl(_run, dataloader_dir, loader_type,
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
     save_sacred_metric(_run, 'CL_GMLP_AvgAcc', avg_acc)
+
+    arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
+    print('CL_GMLP_Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))
