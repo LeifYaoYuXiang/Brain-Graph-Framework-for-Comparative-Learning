@@ -18,6 +18,8 @@ def gmlp_exp_cl(_run, dataloader_dir, loader_type,
                cv_number, n_epoch, alpha, tau, order, n_hidden, drop_out, adam_learning_rate, step_size, gamma):
 
     avg_acc = []
+    avg_f1 = []
+
     for cv_time in range(cv_number):
         print('第'+str(cv_time+1)+'次对比实验开始')
         gmlp_model_cl = GMLP_CL(in_feats=246, n_hidden=n_hidden, n_classes=2,
@@ -113,12 +115,21 @@ def gmlp_exp_cl(_run, dataloader_dir, loader_type,
 
         if cv_time == 0:
             avg_acc = np.array(acc_cl_exp)
+            avg_f1 = np.array(f1_cl_exp)
         else:
             avg_acc = avg_acc + np.array(acc_cl_exp)
+            avg_f1 = avg_f1 + np.array(f1_cl_exp)
 
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
     save_sacred_metric(_run, 'CL_GMLP_AvgAcc', avg_acc)
 
+    avg_f1 = avg_f1 / cv_number
+    avg_f1 = avg_f1.tolist()
+    save_sacred_metric(_run, 'CL_GMLP_Average_F1', avg_f1)
+
     arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
-    print('CL_GMLP_Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))
+    print('CL_GMLP_Average AvgAcc: ' + str(arr_mean) + '; CL_GMLP_Standard Variance AvgAcc: ' + str(arr_std))
+
+    f1_mean, f1_std = calculate_mean_and_standard_variance(avg_f1)
+    print('CL_GMLP_Average AvgF1: ' + str(f1_mean) + '; CL_GMLP_Standard Variance AvgF1: ' + str(f1_std))

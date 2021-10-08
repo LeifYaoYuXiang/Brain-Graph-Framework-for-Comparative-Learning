@@ -24,19 +24,11 @@ def display_matrix_3d(mat):
     plt.show()
 
 
-config = ConfigParser()
-config.read('parameters.ini', encoding='UTF-8')
-fc_matrix = config.get('filepath', 'fc_matrix_dir')
-subject_id = '6061'
-number = '0.txt'
-
+# config = ConfigParser()
+# config.read('parameters.ini', encoding='UTF-8')
+# fc_matrix = config.get('filepath', 'fc_matrix_dir')
+# subject_id = '6061'
+# number = '0.txt'
 # type = 'no_aug_no_aug'
 # mat1 = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
 # # display_matrix_3d(mat1)
-#
-# subject_id = '6314'
-# mat2 = np.loadtxt(os.path.join(fc_matrix, subject_id, type, number))
-# # display_matrix_3d(mat2)
-#
-# mat_minus = abs(mat1-mat2)
-# print(np.where(mat_minus >= 1))

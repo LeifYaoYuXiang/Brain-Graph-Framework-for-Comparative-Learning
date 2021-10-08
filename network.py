@@ -201,6 +201,3 @@ class GIN(nn.Module):
         return embedding
 
 
-# Encoder 选择三: GIN + Graph MLP
-# class GIN_MLP(nn.Module):
-

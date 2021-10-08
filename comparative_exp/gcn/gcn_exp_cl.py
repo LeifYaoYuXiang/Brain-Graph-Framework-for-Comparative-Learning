@@ -7,7 +7,7 @@ from torch.optim import lr_scheduler
 
 from comparative_exp.gcn.gcn_network_cl import GCN_CL
 from comparative_exp.train_test_exp import comparative_test_exp
-from util_deep_learning import save_sacred_metric
+from util_deep_learning import save_sacred_metric, calculate_mean_and_standard_variance
 
 
 def gcn_exp_cl(_run, dataloader_dir, loader_type,
@@ -15,6 +15,8 @@ def gcn_exp_cl(_run, dataloader_dir, loader_type,
                gcn_layers, n_hidden, drop_out, adam_learning_rate, step_size, gamma):
 
     avg_acc = []
+    avg_f1 = []
+
     for i in range(cv_number):
         print('第'+str(i+1)+'次对比实验开始')
         gcn_model_cl = GCN_CL(in_feats=246, n_hidden=n_hidden, n_classes=2, n_layers=gcn_layers,
@@ -43,9 +45,21 @@ def gcn_exp_cl(_run, dataloader_dir, loader_type,
 
         if i == 0:
             avg_acc = np.array(acc_record)
+            avg_f1 = np.array(f1_record)
         else:
             avg_acc = avg_acc + np.array(acc_record)
+            avg_f1 = avg_f1 + np.array(f1_record)
 
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
     save_sacred_metric(_run, 'CL_GCN_AvgAcc', avg_acc)
+
+    avg_f1 = avg_f1 / cv_number
+    avg_f1 = avg_f1.tolist()
+    save_sacred_metric(_run, 'CL_GCN_Average_F1', avg_f1)
+
+    arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
+    print('CL_GCN_Average AvgAcc: ' + str(arr_mean) + '; CL_GCN_Standard Variance AvgAcc: ' + str(arr_std))
+
+    f1_mean, f1_std = calculate_mean_and_standard_variance(avg_f1)
+    print('CL_GCN_Average AvgF1: ' + str(f1_mean) + '; CL_GCN_Standard Variance AvgF1: ' + str(f1_std))

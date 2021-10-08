@@ -39,9 +39,9 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 # 超参数设置
 @ex.config
 def hyper_parameters_config():
-    n_layers = 5
+    n_layers = 1
     drop_out = 0.5
-    nt_xent_loss_temperature = 0.1
+    nt_xent_loss_temperature = 1
     adam_learning_rate = 1e-3
     adam_weight_decay = 5e-4
     n_epoch = 80
@@ -105,7 +105,8 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     # # 对比试验: GCN
     # gcn_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #            cv_number, n_epoch,
-    #            gcn_layers, n_hidden, drop_out, adam_learning_rate, step_size, gamma)
+    #            gcn_layers=5, n_hidden=n_hidden, drop_out=drop_out, adam_learning_rate=adam_learning_rate,
+    #            step_size=step_size, gamma=gamma)
 
     # 对比实验: GAT
     # gat_exp_cl(_run, dataloader_dir, unaug_loader_type,
@@ -134,5 +135,4 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     #            cv_number, n_epoch,
     #            adam_learning_rate=adam_learning_rate, step_size=step_size, gamma=gamma)
 
-    # # 对比试验： GraphCL
 

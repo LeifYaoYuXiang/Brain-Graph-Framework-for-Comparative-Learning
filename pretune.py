@@ -15,6 +15,7 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
             save_model_epoch_number, model_save_dir):
     avg_acc = []
     avg_loss = []
+    avg_f1 = []
 
     for i in range(cv_number):
         print('第'+str(i+1)+'次训练开始')
@@ -87,9 +88,11 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
         if i == 0:
             avg_acc = np.array(acc_record)
             avg_loss = np.array(encoder_loss_record)
+            avg_f1 = np.array(f1_record)
         else:
             avg_acc = avg_acc + np.array(acc_record)
             avg_loss = avg_loss + np.array(encoder_loss_record)
+            avg_f1 = avg_f1 + np.array(f1_record)
 
     # 保存平均值
     avg_acc = avg_acc / cv_number
@@ -100,5 +103,12 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
     avg_loss = avg_loss.tolist()
     save_sacred_metric(_run, 'Average Loss', avg_loss)
 
-    arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
-    print('Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))
+    avg_f1 = avg_f1 / cv_number
+    avg_f1 = avg_f1.tolist()
+    save_sacred_metric(_run, 'Average F1', avg_f1)
+
+    avg_mean, avg_std = calculate_mean_and_standard_variance(avg_acc)
+    print('Average AvgAcc: ' + str(avg_mean) + '; Standard Variance AvgAcc: ' + str(avg_std))
+
+    f1_mean, f1_std = calculate_mean_and_standard_variance(avg_f1)
+    print('Average AvgF1: ' + str(f1_mean) + '; Standard Variance AvgF1: ' + str(f1_std))

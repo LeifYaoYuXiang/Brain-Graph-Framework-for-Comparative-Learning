@@ -15,6 +15,8 @@ def gin_exp_cl(_run, dataloader_dir, loader_type,
                adam_learning_rate, step_size, gamma):
 
     avg_acc = []
+    avg_f1 = []
+
     for i in range(cv_number):
         print('第'+str(i+1)+'次对比实验开始')
         gin_model_cl = GIN_CL(n_layers=5, n_mlp_layers=2,
@@ -46,12 +48,21 @@ def gin_exp_cl(_run, dataloader_dir, loader_type,
 
         if i == 0:
             avg_acc = np.array(acc_record)
+            avg_f1 = np.array(f1_record)
         else:
             avg_acc = avg_acc + np.array(acc_record)
+            avg_f1 = avg_f1 + np.array(f1_record)
 
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
     save_sacred_metric(_run, 'CL_GIN_AvgAcc', avg_acc)
 
+    avg_f1 = avg_f1 / cv_number
+    avg_f1 = avg_f1.tolist()
+    save_sacred_metric(_run, 'CL_GIN_Average_F1', avg_f1)
+
     arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
-    print('CL_GIN_Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))
+    print('CL_GIN_Average AvgAcc: ' + str(arr_mean) + '; CL_GIN_Standard Variance AvgAcc: ' + str(arr_std))
+
+    f1_mean, f1_std = calculate_mean_and_standard_variance(avg_f1)
+    print('CL_GIN_Average AvgF1: ' + str(f1_mean) + '; CL_GIN_Standard Variance AvgF1: ' + str(f1_std))

@@ -14,6 +14,8 @@ def vgae_exp_cl(_run, dataloader_dir, loader_type,
                adam_learning_rate, step_size, gamma):
 
     avg_acc = []
+    avg_f1 = []
+
     for i in range(cv_number):
         print('第'+str(i+1)+'次对比实验开始')
         vage_model_cl = VGAEModel_CL(in_feats=246, n_hidden_1=32, n_hidden_2=16, n_classes=2, node_each_graph=246)
@@ -42,12 +44,21 @@ def vgae_exp_cl(_run, dataloader_dir, loader_type,
 
         if i == 0:
             avg_acc = np.array(acc_record)
+            avg_f1 = np.array(f1_record)
         else:
             avg_acc = avg_acc + np.array(acc_record)
+            avg_f1 = avg_f1 + np.array(f1_record)
 
     avg_acc = avg_acc / cv_number
     avg_acc = avg_acc.tolist()
     save_sacred_metric(_run, 'CL_VGAE_AvgAcc', avg_acc)
 
+    avg_f1 = avg_f1 / cv_number
+    avg_f1 = avg_f1.tolist()
+    save_sacred_metric(_run, 'CL_VGAE_Average_F1', avg_f1)
+
     arr_mean, arr_std = calculate_mean_and_standard_variance(avg_acc)
-    print('CL_VGAE_Average AvgAcc: ' + str(arr_mean) + '; Standard Variance AvgAcc: ' + str(arr_std))
+    print('CL_VGAE_Average AvgAcc: ' + str(arr_mean) + '; CL_VGAE_Standard Variance AvgAcc: ' + str(arr_std))
+
+    f1_mean, f1_std = calculate_mean_and_standard_variance(avg_f1)
+    print('CL_VGAE_Average AvgF1: ' + str(f1_mean) + '; CL_VGAE_Standard Variance AvgF1: ' + str(f1_std))
