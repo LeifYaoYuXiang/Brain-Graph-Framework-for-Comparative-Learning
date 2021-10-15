@@ -20,9 +20,10 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
     for i in range(cv_number):
         print('第'+str(i+1)+'次训练开始')
         # 定义模型
-        # gcn_model = GCN(in_feats=246, n_hidden=n_hidden, n_classes=2, n_layers=gcn_layers,
-        #                 node_each_graph=246,
-        #                 activation=F.relu, dropout=drop_out)
+        gcn_model = GCN(in_feats=246, n_hidden=64, n_classes=2, n_layers=5,
+                        node_each_graph=246,
+                        activation=F.relu, dropout=0.5)
+
         n_layers = config_dic['n_layers']
         n_hidden = config_dic['n_hidden']
         drop_out = config_dic['drop_out']
@@ -34,15 +35,15 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
         gamma = config_dic['gamma']
         alpha = config_dic['alpha']
 
-        gin_model = GIN(n_layers=n_layers, n_mlp_layers=2,
-                        in_feats=246, n_hidden=n_hidden, n_classes=2,
-                        node_each_graph=246,
-                        final_dropout=drop_out, learn_eps=True, graph_pooling_type=pooling_type,
-                        neighbor_pooling_type=pooling_type)
+        # gin_model = GIN(n_layers=n_layers, n_mlp_layers=2,
+        #                 in_feats=246, n_hidden=n_hidden, n_classes=2,
+        #                 node_each_graph=246,
+        #                 final_dropout=drop_out, learn_eps=True, graph_pooling_type=pooling_type,
+        #                 neighbor_pooling_type=pooling_type)
         encoder_loss_fcn = NTXentLoss(temperature=nt_xent_loss_temperature)
 
-        # encoder_optimizer = torch.optim.Adam(gcn_model.parameters(), lr=adam_learning_rate, weight_decay=adam_weight_decay)
-        encoder_optimizer = torch.optim.Adam(gin_model.parameters(), lr=adam_learning_rate, weight_decay=adam_weight_decay)
+        encoder_optimizer = torch.optim.Adam(gcn_model.parameters(), lr=adam_learning_rate, weight_decay=adam_weight_decay)
+        # encoder_optimizer = torch.optim.Adam(gin_model.parameters(), lr=adam_learning_rate, weight_decay=adam_weight_decay)
         encoder_scheduler = lr_scheduler.StepLR(encoder_optimizer, step_size=step_size, gamma=gamma)
 
         train_loader1_list = []
@@ -67,7 +68,7 @@ def pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_
 
         encoder_loss_record, acc_record, f1_record = train_test_pretune(
             n_epoch=n_epoch,
-            model=gin_model,
+            model=gcn_model,
             encoder_optimizer=encoder_optimizer,
             encoder_loss_fcn=encoder_loss_fcn,
             encoder_scheduler=encoder_scheduler,

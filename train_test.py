@@ -123,13 +123,16 @@ def train_encoder(gcn_model, optimizer, loss_fcn, train_loader, train_loader2, a
         graph1 = graph_info1['batch_graph']
         graph1 = dgl.add_self_loop(graph1)
         input1 = (graph_node_features1, graph1, batch_size1)
-        # 输出值
-        logits1, x_dis_1 = gcn_model(input1)
-        adj1 = torch.zeros((1968, 1968))
-        for m in range(batch_size1):
-            adj1[m*246:(m+1)*246, m*246:(m+1)*246] = graph_node_features1[m*246:(m+1)*246]
-        adj_label1 = get_A_r(adj1, 2)
-        loss_Ncontrast_1 = Ncontrast(x_dis_1, adj_label1, tau=1)
+        # 输出值 GIN
+        # logits1, x_dis_1 = gcn_model(input1)
+        # adj1 = torch.zeros((1968, 1968))
+        # for m in range(batch_size1):
+        #     adj1[m*246:(m+1)*246, m*246:(m+1)*246] = graph_node_features1[m*246:(m+1)*246]
+        # adj_label1 = get_A_r(adj1, 2)
+        # loss_Ncontrast_1 = Ncontrast(x_dis_1, adj_label1, tau=1)
+
+        # 输出值 GCN
+        logits1 = gcn_model(input1)
 
         # 图二
         graph_info2 = train_loader2[i]
@@ -138,21 +141,27 @@ def train_encoder(gcn_model, optimizer, loss_fcn, train_loader, train_loader2, a
         graph2 = graph_info2['batch_graph']
         graph2 = dgl.add_self_loop(graph2)
         input2 = (graph_node_features2, graph2, batch_size2)
-        # 输出值
-        logits2, x_dis_2 = gcn_model(input2)
-        adj2 = torch.zeros((1968, 1968))
-        for m in range(batch_size1):
-            adj2[m*246:(m+1)*246, m*246:(m+1)*246] = graph_node_features2[m*246:(m+1)*246]
-        adj_label2 = get_A_r(adj2, 2)
-        loss_Ncontrast_2 = Ncontrast(x_dis_2, adj_label2, tau=1)
+        # 输出值 GIN
+        # logits2, x_dis_2 = gcn_model(input2)
+        # adj2 = torch.zeros((1968, 1968))
+        # for m in range(batch_size1):
+        #     adj2[m*246:(m+1)*246, m*246:(m+1)*246] = graph_node_features2[m*246:(m+1)*246]
+        # adj_label2 = get_A_r(adj2, 2)
+        # loss_Ncontrast_2 = Ncontrast(x_dis_2, adj_label2, tau=1)
+
+        # 输出值 GCN
+        logits2 = gcn_model(input2)
 
         # 计算损失函数
         total_node_number = logits1.size(0)
         embeddings = torch.cat((logits1, logits2))
         indices = torch.arange(total_node_number)
         label = torch.cat((indices, indices))
+        # 损失值 GIN
+        # loss = loss_fcn(embeddings, label) + alpha * loss_Ncontrast_1 + alpha * loss_Ncontrast_2
 
-        loss = loss_fcn(embeddings, label) + alpha * loss_Ncontrast_1 + alpha * loss_Ncontrast_2
+        # 损失值 GCN
+        loss = loss_fcn(embeddings, label)
 
         optimizer.zero_grad()
         loss.backward()
