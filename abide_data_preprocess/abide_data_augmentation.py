@@ -12,8 +12,6 @@ config.read('../parameters.ini', encoding='UTF-8')
 def data_augmentation_process(file_id, voxel_to_bold_type, bold_to_fc_type, voxel_filepath, fc_save_dir, mask_file_path, augmented_times):
     mask = load_nifti(mask_file_path)
     original_data = load_nifti(voxel_filepath)
-    print(mask.shape)
-    print(original_data.shape)
     for i in range(len(voxel_to_bold_type)):
         for j in range(len(bold_to_fc_type)):
             # 判断相关文件夹是否存在，如果不存在就创建
@@ -46,6 +44,8 @@ def augmentation_main(file_id_list):
     mask_file_path = config.get('filepath', 'mask_file_path')
 
     augment_file_number = len(file_id_list)
+    print(augment_file_number)
+
     voxel_file_augment_path_list = []
 
     voxel_to_bold_type = ['no_aug', 'aug']
@@ -70,8 +70,7 @@ def augmentation_main(file_id_list):
 
 
 if __name__ == '__main__':
-    file_id_label_path = config.get('abide_path', 'file_id_label_path')
-    with open(file_id_label_path, 'r') as load_f:
-        file_id_label_dict = json.load(load_f)
-    file_id_list = [key for key,value in file_id_label_dict.items() ]
+    voxel_dir = config.get('abide_path', 'voxel_dir')
+    file_id_list = os.listdir(voxel_dir)
+    #
     augmentation_main(file_id_list=file_id_list)

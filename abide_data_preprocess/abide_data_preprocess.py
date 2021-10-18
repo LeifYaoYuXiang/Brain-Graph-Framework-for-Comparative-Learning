@@ -21,7 +21,7 @@ data_description_path = config.get('abide_path', 'data_description')
 # 1: 75
 # 2： 100
 def nyu_data_info_cv():
-    extension = '_alff.nii.gz'
+    extension = '_func_preproc.nii.gz'
     nyu_data_info_cv_dict = {}
     nyu_data_label_one_list = []
     nyu_data_label_two_list = []
@@ -114,45 +114,45 @@ if __name__ == '__main__':
     file_id_label_path = config.get('abide_path', 'file_id_label_path')
 
     # 生成相关的cv_info
-    # nyu_data_info_cv_dict, nyu_data_label_one_list, nyu_data_label_two_list = nyu_data_info_cv()
-    #
-    # cv_info = k_fold_generate_data(k_fold_times=5, data_label_one_list=nyu_data_label_one_list,
-    #                                data_label_two_list=nyu_data_label_two_list,
-    #                                label_one_number=75, label_two_number=75)
-    #
-    # file_id_label_dict = {}
-    # for nyu_data_label_one in nyu_data_label_one_list:
-    #     file_id_label_dict[nyu_data_label_one] = 1
-    # for nyu_data_label_two in nyu_data_label_two_list:
-    #     file_id_label_dict[nyu_data_label_two] = 2
-    # # 写入
-    # json_str = json.dumps(cv_info)
-    # with open(cv_info_path, 'w') as json_file:
-    #     json_file.write(json_str)
-    #
-    # json_str = json.dumps(file_id_label_dict)
-    # with open(file_id_label_path, 'w') as json_file:
-    #     json_file.write(json_str)
+    nyu_data_info_cv_dict, nyu_data_label_one_list, nyu_data_label_two_list = nyu_data_info_cv()
+
+    cv_info = k_fold_generate_data(k_fold_times=5, data_label_one_list=nyu_data_label_one_list,
+                                   data_label_two_list=nyu_data_label_two_list,
+                                   label_one_number=75, label_two_number=75)
+
+    file_id_label_dict = {}
+    for nyu_data_label_one in nyu_data_label_one_list:
+        file_id_label_dict[nyu_data_label_one] = 1
+    for nyu_data_label_two in nyu_data_label_two_list:
+        file_id_label_dict[nyu_data_label_two] = 2
+    # 写入
+    json_str = json.dumps(cv_info)
+    with open(cv_info_path, 'w') as json_file:
+        json_file.write(json_str)
+
+    json_str = json.dumps(file_id_label_dict)
+    with open(file_id_label_path, 'w') as json_file:
+        json_file.write(json_str)
 
     # 读取
-    with open(cv_info_path, 'r') as load_f:
-        cv_info = json.load(load_f)
-
-    with open(file_id_label_path, 'r') as load_f:
-        file_id_label_dict = json.load(load_f)
-
-
-    print('no_aug_no_aug')
-    abide_data_preprocess('no_aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('no_aug_ratio_sample')
-    abide_data_preprocess('no_aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('no_aug_slide_window')
-    abide_data_preprocess('no_aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('aug_no_aug')
-    abide_data_preprocess('aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('aug_ratio_sample')
-    abide_data_preprocess('aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('aug_slide_window')
-    abide_data_preprocess('aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # with open(cv_info_path, 'r') as load_f:
+    #     cv_info = json.load(load_f)
+    #
+    # with open(file_id_label_path, 'r') as load_f:
+    #     file_id_label_dict = json.load(load_f)
+    #
+    #
+    # print('no_aug_no_aug')
+    # abide_data_preprocess('no_aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('no_aug_ratio_sample')
+    # abide_data_preprocess('no_aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('no_aug_slide_window')
+    # abide_data_preprocess('no_aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('aug_no_aug')
+    # abide_data_preprocess('aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('aug_ratio_sample')
+    # abide_data_preprocess('aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('aug_slide_window')
+    # abide_data_preprocess('aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
 
 
