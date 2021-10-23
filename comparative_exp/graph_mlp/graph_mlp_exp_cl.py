@@ -62,12 +62,19 @@ def gmlp_exp_cl(_run, dataloader_dir, loader_type,
                 output, x_dis = gmlp_model_cl(input)
                 graph_batch_label = torch.tensor(np.array(graph_info['batch_label']), dtype=torch.long)
 
-                adj = torch.zeros((1968, 1968))
+                # 用于Abide数据集的label的修改情况
+                graph_batch_label[graph_batch_label == 2] = 0
+
+                adj = torch.zeros((246*batch_size, 246*batch_size))
+
                 for m in range(batch_size):
                     adj[m*246:(m+1)*246, m*246:(m+1)*246] = graph_node_features[m*246:(m+1)*246]
 
                 adj_label = get_A_r(adj, order)
                 loss_train_class = F.nll_loss(output, graph_batch_label)
+                # print(output.shape)
+                # print(x_dis.shape)
+                # print(adj_label.shape)
                 loss_Ncontrast = Ncontrast(x_dis, adj_label, tau=tau)
                 loss_train = loss_train_class + loss_Ncontrast * alpha
                 # loss_train = loss_Ncontrast * alpha
@@ -96,6 +103,10 @@ def gmlp_exp_cl(_run, dataloader_dir, loader_type,
                         logits = torch.cat((logits, output), 0)
                         graph_batch_label = torch.cat((graph_batch_label, torch.tensor(np.array(graph_info['batch_label']), dtype=torch.long)), 0)
                 _, indices = torch.max(logits, dim=1)
+
+                # 用于Abide数据集的label的修改情况
+                graph_batch_label[graph_batch_label == 2] = 0
+
                 acc = acc_score(indices, graph_batch_label)
                 f1 = f1_score(precision=precision_metric(indices, graph_batch_label), recall=recall_metric(indices, graph_batch_label))
 

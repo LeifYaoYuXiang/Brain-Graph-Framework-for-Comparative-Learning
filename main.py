@@ -31,7 +31,7 @@ from comparative_exp.gcn.gcn_exp_cl import gcn_exp_cl
 
 
 os.environ["GIT_PYTHON_REFRESH"] = "quiet"
-ex = Experiment("Augmented Comparative Learning With Finetune")
+ex = Experiment("Abide Augmented Comparative Learning")
 ex.observers.append(MongoObserver.create(url='localhost:27017', db_name='sacred'))
 ex.captured_out_filter = apply_backspaces_and_linefeeds
 
@@ -39,12 +39,12 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 # 超参数设置
 @ex.config
 def hyper_parameters_config():
-    n_layers = 1
+    n_layers = 5
     drop_out = 0.5
-    nt_xent_loss_temperature = 1
+    nt_xent_loss_temperature = 0.01
     adam_learning_rate = 1e-3
     adam_weight_decay = 5e-4
-    n_epoch = 80
+    n_epoch = 200
     n_hidden = 64
     step_size = 10
     gamma = 0.5
@@ -68,8 +68,8 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     seed_torch(seed)
 
     cv_number = config.getint('experiment', 'cv_number')
-    dataloader_dir = config.get('filepath', 'dataloader_dir')
-    model_save_dir = config.get('filepath', 'model_save_dir')
+    dataloader_dir = config.get('abide_path', 'dataloader_dir')
+    model_save_dir = config.get('abide_path', 'model_save_dir')
 
     voxel_to_bold_options = ['no_aug', 'aug']
     bold_to_fc_options = ['no_aug', 'slide_window', 'ratio_sample']
@@ -91,9 +91,9 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
         'pooling_type': pooling_type,
     }
     # # 特征提取
-    pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
-             cv_number, n_epoch, gcin_config_dic,
-             save_model_epoch_number, model_save_dir)
+    # pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
+    #          cv_number, n_epoch, gcin_config_dic,
+    #          save_model_epoch_number, model_save_dir)
 
     # 微调
     # finetune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
@@ -105,7 +105,7 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     # # 对比试验: GCN
     # gcn_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #            cv_number, n_epoch,
-    #            gcn_layers=5, n_hidden=n_hidden, drop_out=drop_out, adam_learning_rate=adam_learning_rate,
+    #            gcn_layers=5, n_hidden=64, drop_out=drop_out, adam_learning_rate=adam_learning_rate,
     #            step_size=step_size, gamma=gamma)
 
     # 对比实验: GAT
@@ -119,7 +119,8 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     # gin_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #            cv_number, n_epoch,
     #            adam_learning_rate=adam_learning_rate, step_size=step_size, gamma=gamma)
-    #
+
+
     # # 对比试验： Graph-MLP
     # gmlp_exp_cl(_run, dataloader_dir, unaug_loader_type,
     #              cv_number, n_epoch, alpha=5, tau=1.0, order=2, n_hidden=64, drop_out=0.6, adam_learning_rate=adam_learning_rate,

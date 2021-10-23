@@ -46,6 +46,9 @@ def train_test_cl_in_one_epoch(model, train_loader_this_epoch, test_loader, cl_o
         logits = model(input)
         graph_batch_label = torch.tensor(np.array(graph_info['batch_label']), dtype=torch.long)
 
+        # 用于Abide数据集的label的修改情况
+        graph_batch_label[graph_batch_label == 2] = 0
+
         loss = cl_loss_fcn(logits, graph_batch_label)
         cl_optimizer.zero_grad()
         loss.backward()
@@ -71,6 +74,10 @@ def train_test_cl_in_one_epoch(model, train_loader_this_epoch, test_loader, cl_o
                 logits = torch.cat((logits, output), 0)
                 graph_batch_label = torch.cat((graph_batch_label, torch.tensor(np.array(graph_info['batch_label']), dtype=torch.long)), 0)
         _, indices = torch.max(logits, dim=1)
+
+        # 用于Abide数据集的label的修改情况
+        graph_batch_label[graph_batch_label == 2] = 0
+
         acc = acc_score(indices, graph_batch_label)
         f1 = f1_score(precision=precision_metric(indices, graph_batch_label), recall=recall_metric(indices, graph_batch_label))
     return encoder_loss, acc, f1
