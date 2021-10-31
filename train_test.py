@@ -13,7 +13,7 @@ from util_deep_learning import save_model, save_net_state_dict
 
 
 # 特征提取
-from util_visualization import display_matrix_2d
+# from util_visualization import display_matrix_2d
 
 
 def train_test_pretune(

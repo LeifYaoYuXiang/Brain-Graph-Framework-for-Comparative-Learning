@@ -7,12 +7,12 @@ from sacred.observers import MongoObserver
 from sacred.utils import apply_backspaces_and_linefeeds
 
 # 自定义函数
-from comparative_exp.gae.gae_exp_cl import gae_exp_cl
-from comparative_exp.gat.gat_exp_cl import gat_exp_cl
-from comparative_exp.gin.gin_exp_cl import gin_exp_cl
-from comparative_exp.graph_mlp.graph_mlp_exp_cl import gmlp_exp_cl
-from comparative_exp.vgae.vgae_exp_cl import vgae_exp_cl
-from finetune import finetune
+# from comparative_exp.gae.gae_exp_cl import gae_exp_cl
+# from comparative_exp.gat.gat_exp_cl import gat_exp_cl
+# from comparative_exp.gin.gin_exp_cl import gin_exp_cl
+# from comparative_exp.graph_mlp.graph_mlp_exp_cl import gmlp_exp_cl
+# from comparative_exp.vgae.vgae_exp_cl import vgae_exp_cl
+# from finetune import finetune
 from pretune import pretune
 from util_deep_learning import seed_torch
 from comparative_exp.gcn.gcn_exp_cl import gcn_exp_cl
@@ -39,13 +39,13 @@ ex.captured_out_filter = apply_backspaces_and_linefeeds
 # 超参数设置
 @ex.config
 def hyper_parameters_config():
-    n_layers = 5
-    drop_out = 0.5
-    nt_xent_loss_temperature = 0.01
-    adam_learning_rate = 1e-3
+    n_layers = 1
+    drop_out = 0.3
+    nt_xent_loss_temperature = 10
+    adam_learning_rate = 1e-4
     adam_weight_decay = 5e-4
-    n_epoch = 200
-    n_hidden = 64
+    n_epoch = 100
+    n_hidden = 32
     step_size = 10
     gamma = 0.5
     alpha = 0
@@ -74,9 +74,13 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     voxel_to_bold_options = ['no_aug', 'aug']
     bold_to_fc_options = ['no_aug', 'slide_window', 'ratio_sample']
 
-    train1_loader_type = voxel_to_bold_options[1] + '_' + bold_to_fc_options[1]  # train 1: aug_slide_window
-    train2_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[2]  # train 2: no_aug_ratio_sample
+    train1_loader_type = voxel_to_bold_options[1] + '_' + bold_to_fc_options[2]  # train 1: aug_slide_window
+    train2_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[1]  # train 2: no_aug_ratio_sample
     unaug_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[0]
+
+    ## 现在我们尝试相关的别的可能性：
+    # train 1: aug_ratio_sample
+    # train 2: no_aug_slide_window
 
     gcin_config_dic = {
         'n_layers': n_layers,
@@ -90,10 +94,10 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
         'gamma': gamma,
         'pooling_type': pooling_type,
     }
-    # # 特征提取
-    # pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
-    #          cv_number, n_epoch, gcin_config_dic,
-    #          save_model_epoch_number, model_save_dir)
+    # 特征提取
+    pretune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
+             cv_number, n_epoch, gcin_config_dic,
+             save_model_epoch_number, model_save_dir)
 
     # 微调
     # finetune(_run, dataloader_dir, train1_loader_type, train2_loader_type, unaug_loader_type,
