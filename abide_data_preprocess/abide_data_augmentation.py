@@ -1,8 +1,9 @@
-import json, os
+import os
 from configparser import ConfigParser
 import numpy as np
 from tqdm import trange
-from data_process.data_augment import load_nifti, voxel_to_bold, bold_to_fc_augmented_slide_window, bold_to_fc, \
+
+from data_augment import load_nifti, voxel_to_bold, bold_to_fc_augmented_slide_window, bold_to_fc, \
     bold_to_fc_augmented_ratio_sample
 
 config = ConfigParser()
@@ -25,22 +26,22 @@ def data_augmentation_process(file_id, voxel_to_bold_type, bold_to_fc_type, voxe
             if voxel_to_bold_type[i] == 'no_aug':
                 bold_matrix = voxel_to_bold(file_name=file_id, original_data=original_data, mask=mask, roi_ratio=1)
             else:
-                bold_matrix = voxel_to_bold(file_name=file_id, original_data=original_data, mask=mask, roi_ratio=0.3)
-
+                bold_matrix = voxel_to_bold(file_name=file_id, original_data=original_data, mask=mask, roi_ratio=0.5)
             if bold_to_fc_type[j] == 'no_aug':
                 fc_array = bold_to_fc(file_name=file_id, bold_array=bold_matrix)
             elif bold_to_fc_type[j] == 'slide_window':
-                fc_array = bold_to_fc_augmented_slide_window(file_name=file_id, bold_array=bold_matrix, win_size=80)
+                fc_array = bold_to_fc_augmented_slide_window(file_name=file_id, bold_array=bold_matrix, win_size=100)
             else:
-                fc_array, timestamp_array = bold_to_fc_augmented_ratio_sample(file_name=file_id, bold_array=bold_matrix,ratio=0.3)
+                fc_array, timestamp_array = bold_to_fc_augmented_ratio_sample(file_name=file_id, bold_array=bold_matrix, ratio=0.5)
+
             fc_array[np.isnan(fc_array)] = 0
             np.savetxt(os.path.join(fc_save_dir_main, str(augmented_times)+'.txt'), fc_array, delimiter='\t')
 
 
 def augmentation_main(file_id_list):
     augmented_times = 200
-    voxel_dir_path = config.get('abide_path', 'voxel_dir')
-    fc_saved_dir_path = config.get('abide_path', 'fc_matrix_dir')
+    voxel_dir_path = config.get('abide_path_3', 'voxel_dir')
+    fc_saved_dir_path = config.get('abide_path_3', 'fc_matrix_dir')
     mask_file_path = config.get('filepath', 'mask_file_path')
 
     augment_file_number = len(file_id_list)
@@ -56,6 +57,7 @@ def augmentation_main(file_id_list):
     for voxel_file in voxel_files_dir:
         if voxel_file in file_id_list:
             voxel_file_augment_path_list.append(voxel_dir_path + '/' + voxel_file)
+
     # 开始增强数据
     for i in trange(augmented_times):
         for j in range(augment_file_number):
@@ -69,8 +71,7 @@ def augmentation_main(file_id_list):
             print('第'+str(j+1)+'个数据处理完成：' + str(file_id_list[j]))
 
 
-if __name__ == '__main__':
-    voxel_dir = config.get('abide_path', 'voxel_dir')
-    file_id_list = os.listdir(voxel_dir)
-    #
-    augmentation_main(file_id_list=file_id_list)
+voxel_dir = config.get('abide_path_3', 'voxel_dir')
+file_id_list = os.listdir(voxel_dir)
+augmentation_main(file_id_list=file_id_list)
+

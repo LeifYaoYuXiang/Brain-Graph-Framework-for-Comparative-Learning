@@ -52,6 +52,7 @@ def hyper_parameters_config():
     seed = 1029
     save_model_epoch_number = 79
     pooling_type = 'sum'
+    data = 'abide_path_6'
 
 
 # Entry
@@ -60,7 +61,7 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
          adam_learning_rate, adam_weight_decay,
          n_epoch,
          step_size, gamma, alpha, pooling_type,
-         seed, save_model_epoch_number):
+         seed, save_model_epoch_number, data):
 
     config = ConfigParser()
     config.read('parameters.ini', encoding='UTF-8')
@@ -68,19 +69,17 @@ def main(_run, n_layers, n_hidden, drop_out, nt_xent_loss_temperature,
     seed_torch(seed)
 
     cv_number = config.getint('experiment', 'cv_number')
-    dataloader_dir = config.get('abide_path', 'dataloader_dir')
-    model_save_dir = config.get('abide_path', 'model_save_dir')
+
+    dataloader_dir = config.get('abide_path_6', 'dataloader_dir')
+    model_save_dir = config.get('abide_path_6', 'model_save_dir')
 
     voxel_to_bold_options = ['no_aug', 'aug']
     bold_to_fc_options = ['no_aug', 'slide_window', 'ratio_sample']
 
-    train1_loader_type = voxel_to_bold_options[1] + '_' + bold_to_fc_options[2]  # train 1: aug_slide_window
-    train2_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[1]  # train 2: no_aug_ratio_sample
+    train1_loader_type = voxel_to_bold_options[1] + '_' + bold_to_fc_options[1]  # train 1: aug_slide_window
+    train2_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[2]  # train 2: no_aug_ratio_sample
     unaug_loader_type = voxel_to_bold_options[0] + '_' + bold_to_fc_options[0]
 
-    ## 现在我们尝试相关的别的可能性：
-    # train 1: aug_ratio_sample
-    # train 2: no_aug_slide_window
 
     gcin_config_dic = {
         'n_layers': n_layers,

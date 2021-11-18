@@ -60,9 +60,9 @@ def train_test_pretune(
         if n > 20:
             encoder_scheduler.step()
 
-        if n == save_model_epoch_number:
-            save_net_state_dict(model, os.path.join(model_save_dir, str(cv_time)+'net.pkl'))
-            save_model(lr_model, os.path.join(model_save_dir, str(cv_time)+'regression.pkl'))
+        # if n == save_model_epoch_number:
+        #     save_net_state_dict(model, os.path.join(model_save_dir, str(cv_time)+'net.pkl'))
+        #     save_model(lr_model, os.path.join(model_save_dir, str(cv_time)+'regression.pkl'))
 
     return encoder_loss_record, acc_record, f1_record
 

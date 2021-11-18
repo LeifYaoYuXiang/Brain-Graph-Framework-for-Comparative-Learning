@@ -13,14 +13,13 @@ from sklearn.preprocessing import MinMaxScaler
 
 config = ConfigParser()
 config.read('../parameters.ini', encoding='UTF-8')
-data_description_path = config.get('abide_path', 'data_description')
 
 
 # 1: 73
 # 2： 98
 def nyu_data_info_cv():
-    voxel_file_path = config.get('abide_path', 'voxel_dir')
-    file_id_label_path = config.get('abide_path', 'file_id_label_path')
+    voxel_file_path = config.get('abide_path_5', 'voxel_dir')
+    file_id_label_path = config.get('abide_path_5', 'file_id_label_path')
 
     file_name_list = os.listdir(voxel_file_path)
     with open(file_id_label_path, 'r') as load_f:
@@ -62,17 +61,24 @@ def load_raw_data(raw_data_txt_path_list, percent=0.1):
         scaled_txt_array = min_max_scaler.fit_transform(txt_array.T)
         txt_array = scaled_txt_array.T
         abs_array = abs(txt_array)
+
         # 生成稀疏矩阵
         baseline = np.quantile(abs_array, 1-percent)
         abs_array[abs_array < baseline] = 0
         arr_sparse = sparse.csr_matrix(abs_array)
+
         # 生成DGL图结构
         graph = dgl.from_scipy(arr_sparse)
         # 生成DGL图的点特征
         min_max_scaler = MinMaxScaler()
+
         # 按行归一化
         scaled_array = min_max_scaler.fit_transform(txt_array.T)
         array = scaled_array.T
+
+        # 按列归一化
+        # array = min_max_scaler.fit_transform(txt_array)
+
         graph.ndata['feat'] = torch.from_numpy(array)
         graph_list.append(graph)
     return graph_list
@@ -102,10 +108,10 @@ def generate_data_in_one_epoch(data, label, batch_size):
 
 def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
                           maximum_epoch_number, save_dir, cv_info, percent, batch_size):
-    voxel_dir_path = config.get('abide_path', 'voxel_dir')
+    voxel_dir_path = config.get('abide_path_5', 'voxel_dir')
     file_name_list = os.listdir(voxel_dir_path)
 
-    file_id_label_path = config.get('abide_path', 'file_id_label_path')
+    file_id_label_path = config.get('abide_path_5', 'file_id_label_path')
     with open(file_id_label_path, 'r') as load_f:
         file_id_label_dict = json.load(load_f)
 
@@ -120,15 +126,18 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
 
     voxel_to_bold_to_fc = voxel_to_bold + '_' + bold_to_fc
     voxel_to_bold_to_fc_path = os.path.join(save_dir, voxel_to_bold_to_fc)
+    # 创建文件夹：'F:\AbideData\dataloader\no_aug_no_aug'
     os.mkdir(voxel_to_bold_to_fc_path)
 
     for cv_number in range(len(cv_info)):
         voxel_to_bold_to_fc_cv_number_path = os.path.join(voxel_to_bold_to_fc_path, str(cv_number))
+        # 创建文件夹：'F:\AbideData\dataloader\no_aug_no_aug\0'
         os.mkdir(voxel_to_bold_to_fc_cv_number_path)
-
         voxel_to_bold_to_fc_cv_number_train_path = os.path.join(voxel_to_bold_to_fc_cv_number_path, 'train')
-        os.mkdir(voxel_to_bold_to_fc_cv_number_train_path)
         voxel_to_bold_to_fc_cv_number_test_path = os.path.join(voxel_to_bold_to_fc_cv_number_path, 'test')
+        # 创建文件夹：'F:\AbideData\dataloader\no_aug_no_aug\0\train'
+        os.mkdir(voxel_to_bold_to_fc_cv_number_train_path)
+        # 创建文件夹：'F:\AbideData\dataloader\no_aug_no_aug\0\test'
         os.mkdir(voxel_to_bold_to_fc_cv_number_test_path)
 
         train_index = cv_info[cv_number]['train']
@@ -137,6 +146,7 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
         for n_epoch in trange(maximum_epoch_number):
             raw_train_data_txt_path_list = []
             raw_test_data_txt_path_list = []
+
             # 加载train的数据
             train_label = []
             for i in range(len(train_index)):
@@ -150,8 +160,8 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
             train_batch_graph_in_one_dataloader = generate_data_in_one_epoch(train_data, train_label, batch_size=batch_size)
             # 生成数据集
             train_pkl_path = os.path.join(voxel_to_bold_to_fc_cv_number_train_path, str(n_epoch)+'.pkl')
-            train_pkl = open(train_pkl_path, 'wb')
-            joblib.dump(train_batch_graph_in_one_dataloader, train_pkl)
+            with open(train_pkl_path, 'wb') as train_pkl:
+                joblib.dump(train_batch_graph_in_one_dataloader, train_pkl)
 
             # 加载test的数据
             test_label = []
@@ -166,19 +176,19 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
             test_batch_graph_in_one_dataloader = generate_data_in_one_epoch(test_data, test_label, batch_size=batch_size)
             # 生成数据集
             test_pkl_path = os.path.join(voxel_to_bold_to_fc_cv_number_test_path, str(n_epoch)+'.pkl')
-            test_pkl = open(test_pkl_path, 'wb')
-            joblib.dump(test_batch_graph_in_one_dataloader, test_pkl)
+            with open(test_pkl_path, 'wb') as test_pkl:
+                joblib.dump(test_batch_graph_in_one_dataloader, test_pkl)
 
 
-if __name__ == '__main__':
+def main():
     maximum_epoch_number = 200
-    percent = 0.1
+    percent = 0.2
     batch_size = 8
 
-    base_dir = config.get('abide_path', 'fc_matrix_dir')
-    save_dir = config.get('abide_path', 'dataloader_dir')
-    cv_info_path = config.get('abide_path', 'cv_info_path')
-    file_id_label_path = config.get('abide_path', 'file_id_label_path')
+    base_dir = config.get('abide_path_5', 'fc_matrix_dir')
+    save_dir = config.get('abide_path_5', 'dataloader_dir')
+    cv_info_path = config.get('abide_path_5', 'cv_info_path')
+    # file_id_label_path = config.get('abide_path_5', 'file_id_label_path')
 
     # # 生成相关的cv_info
     # nyu_data_label_one_list, nyu_data_label_two_list = nyu_data_info_cv()
@@ -208,3 +218,4 @@ if __name__ == '__main__':
     abide_data_preprocess('aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
 
 
+main()
