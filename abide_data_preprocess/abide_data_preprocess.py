@@ -18,8 +18,8 @@ config.read('../parameters.ini', encoding='UTF-8')
 # 1: 73
 # 2： 98
 def nyu_data_info_cv():
-    voxel_file_path = config.get('abide_path_5', 'voxel_dir')
-    file_id_label_path = config.get('abide_path_5', 'file_id_label_path')
+    voxel_file_path = config.get('abide_path_9', 'voxel_dir')
+    file_id_label_path = config.get('abide_path_9', 'file_id_label_path')
 
     file_name_list = os.listdir(voxel_file_path)
     with open(file_id_label_path, 'r') as load_f:
@@ -108,10 +108,10 @@ def generate_data_in_one_epoch(data, label, batch_size):
 
 def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
                           maximum_epoch_number, save_dir, cv_info, percent, batch_size):
-    voxel_dir_path = config.get('abide_path_5', 'voxel_dir')
+    voxel_dir_path = config.get('abide_path_9', 'voxel_dir')
     file_name_list = os.listdir(voxel_dir_path)
 
-    file_id_label_path = config.get('abide_path_5', 'file_id_label_path')
+    file_id_label_path = config.get('abide_path_9', 'file_id_label_path')
     with open(file_id_label_path, 'r') as load_f:
         file_id_label_dict = json.load(load_f)
 
@@ -182,13 +182,13 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
 
 def main():
     maximum_epoch_number = 200
-    percent = 0.2
+    percent = 0.5
     batch_size = 8
 
-    base_dir = config.get('abide_path_5', 'fc_matrix_dir')
-    save_dir = config.get('abide_path_5', 'dataloader_dir')
-    cv_info_path = config.get('abide_path_5', 'cv_info_path')
-    # file_id_label_path = config.get('abide_path_5', 'file_id_label_path')
+    base_dir = config.get('abide_path_9', 'fc_matrix_dir')
+    save_dir = config.get('abide_path_9', 'dataloader_dir')
+    cv_info_path = config.get('abide_path_9', 'cv_info_path')
+    # file_id_label_path = config.get('abide_path_9', 'file_id_label_path9)
 
     # # 生成相关的cv_info
     # nyu_data_label_one_list, nyu_data_label_two_list = nyu_data_info_cv()
