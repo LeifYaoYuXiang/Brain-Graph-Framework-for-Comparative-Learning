@@ -1,5 +1,7 @@
 import os, json, joblib
 from random import sample
+
+import pandas as pd
 import torch
 import dgl
 from scipy import sparse
@@ -15,23 +17,41 @@ config = ConfigParser()
 config.read('../parameters.ini', encoding='UTF-8')
 
 
-# 1: 73
-# 2： 98
-def nyu_data_info_cv():
-    voxel_file_path = config.get('abide_path_9', 'voxel_dir')
-    file_id_label_path = config.get('abide_path_9', 'file_id_label_path')
+# 0: 71
+# 1：81
+def data_info_cv():
+    data_description_filepath = config.get('abide_path', 'data_description')
+    voxel_file_path = config.get('abide_path', 'voxel_dir')
 
-    file_name_list = os.listdir(voxel_file_path)
-    with open(file_id_label_path, 'r') as load_f:
-        file_id_label_dict = json.load(load_f)
+    df = pd.read_csv(data_description_filepath)
+
+    data_description = {}
+    experiment_data_description = {}
+    data_label_zero_list = []
     data_label_one_list = []
-    data_label_two_list = []
-    for item in file_name_list:
-        if file_id_label_dict[item] == 1:
-            data_label_one_list.append(item)
+
+    for row in df.itertuples():
+        FILE_ID = getattr(row, 'FILE_ID')
+        label = getattr(row, 'DX_GROUP')
+        if label == 1:
+            label = 0
         else:
-            data_label_two_list.append(item)
-    return data_label_one_list, data_label_two_list
+            label = 1
+        data_description[FILE_ID] = label
+    file_name_list = os.listdir(voxel_file_path)
+
+    for each_filename in file_name_list:
+        filename = each_filename.split('.')[0]
+        if len(filename.split('_')) == 4:
+            filename = filename.split('_')[0] + '_' + filename.split('_')[1]
+        else:
+            filename = filename.split('_')[0] + '_' + filename.split('_')[1] + '_' + filename.split('_')[2]
+        experiment_data_description[each_filename] = data_description[filename]
+        if data_description[filename] == 0:
+            data_label_zero_list.append(each_filename)
+        elif data_description[filename] == 1:
+            data_label_one_list.append(each_filename)
+    return data_label_zero_list, data_label_one_list
 
 
 # 生成k-fold的CV
@@ -108,10 +128,11 @@ def generate_data_in_one_epoch(data, label, batch_size):
 
 def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
                           maximum_epoch_number, save_dir, cv_info, percent, batch_size):
-    voxel_dir_path = config.get('abide_path_9', 'voxel_dir')
+
+    voxel_dir_path = config.get('abide_path', 'voxel_dir')
     file_name_list = os.listdir(voxel_dir_path)
 
-    file_id_label_path = config.get('abide_path_9', 'file_id_label_path')
+    file_id_label_path = config.get('abide_path', 'file_id_label_path')
     with open(file_id_label_path, 'r') as load_f:
         file_id_label_dict = json.load(load_f)
 
@@ -182,23 +203,12 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
 
 def main():
     maximum_epoch_number = 200
-    percent = 0.5
+    percent = 0.1
     batch_size = 8
 
-    base_dir = config.get('abide_path_9', 'fc_matrix_dir')
-    save_dir = config.get('abide_path_9', 'dataloader_dir')
-    cv_info_path = config.get('abide_path_9', 'cv_info_path')
-    # file_id_label_path = config.get('abide_path_9', 'file_id_label_path9)
-
-    # # 生成相关的cv_info
-    # nyu_data_label_one_list, nyu_data_label_two_list = nyu_data_info_cv()
-    # cv_info = k_fold_generate_data(k_fold_times=5, data_label_one_list=nyu_data_label_one_list,
-    #                                data_label_two_list=nyu_data_label_two_list,
-    #                                label_one_number=73, label_two_number=73)
-    # # 写入
-    # json_str = json.dumps(cv_info)
-    # with open(cv_info_path, 'w') as json_file:
-    #     json_file.write(json_str)
+    base_dir = config.get('abide_path', 'fc_matrix_dir')
+    save_dir = config.get('abide_path', 'dataloader_dir')
+    cv_info_path = config.get('abide_path', 'cv_info_path')
 
     # 读取
     with open(cv_info_path, 'r') as load_f:
@@ -218,4 +228,16 @@ def main():
     abide_data_preprocess('aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
 
 
-main()
+if __name__ == '__main__':
+    # data_label_zero_list, data_label_one_list = data_info_cv()
+    # cv_info_path = config.get('abide_path', 'cv_info_path')
+    # cv_info = k_fold_generate_data(k_fold_times=5,
+    #                                data_label_one_list=data_label_zero_list,
+    #                                data_label_two_list=data_label_one_list,
+    #                                label_one_number=71, label_two_number=71)
+    # # 写入
+    # json_str = json.dumps(cv_info)
+    # with open(cv_info_path, 'w') as json_file:
+    #     json_file.write(json_str)
+
+    main()

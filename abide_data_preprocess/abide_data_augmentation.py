@@ -22,7 +22,6 @@ def data_augmentation_process(file_id, voxel_to_bold_type, bold_to_fc_type, voxe
             fc_save_dir_main = os.path.join(fc_save_dir, file_id, augmentation_type)
             if not os.path.exists(fc_save_dir_main):
                 os.mkdir(fc_save_dir_main)
-
             if voxel_to_bold_type[i] == 'no_aug':
                 bold_matrix = voxel_to_bold(file_name=file_id, original_data=original_data, mask=mask, roi_ratio=1)
             else:
@@ -33,15 +32,14 @@ def data_augmentation_process(file_id, voxel_to_bold_type, bold_to_fc_type, voxe
                 fc_array = bold_to_fc_augmented_slide_window(file_name=file_id, bold_array=bold_matrix, win_size=100)
             else:
                 fc_array, timestamp_array = bold_to_fc_augmented_ratio_sample(file_name=file_id, bold_array=bold_matrix, ratio=0.5)
-
             fc_array[np.isnan(fc_array)] = 0
             np.savetxt(os.path.join(fc_save_dir_main, str(augmented_times)+'.txt'), fc_array, delimiter='\t')
 
 
 def augmentation_main(file_id_list):
     augmented_times = 200
-    voxel_dir_path = config.get('abide_path_3', 'voxel_dir')
-    fc_saved_dir_path = config.get('abide_path_3', 'fc_matrix_dir')
+    voxel_dir_path = config.get('abide_path', 'voxel_dir')
+    fc_saved_dir_path = config.get('abide_path', 'fc_matrix_dir')
     mask_file_path = config.get('filepath', 'mask_file_path')
 
     augment_file_number = len(file_id_list)
@@ -51,7 +49,6 @@ def augmentation_main(file_id_list):
 
     voxel_to_bold_type = ['no_aug', 'aug']
     bold_to_fc_type = ['no_aug', 'ratio_sample', 'slide_window']
-
     # 检查每一个voxel文件，判断是否需要进行数据增强处理
     voxel_files_dir = os.listdir(voxel_dir_path)
     for voxel_file in voxel_files_dir:
@@ -71,7 +68,7 @@ def augmentation_main(file_id_list):
             print('第'+str(j+1)+'个数据处理完成：' + str(file_id_list[j]))
 
 
-voxel_dir = config.get('abide_path_3', 'voxel_dir')
-file_id_list = os.listdir(voxel_dir)
-augmentation_main(file_id_list=file_id_list)
-
+if __name__ == '__main__':
+    voxel_dir = config.get('abide_path', 'voxel_dir')
+    file_id_list = os.listdir(voxel_dir)
+    augmentation_main(file_id_list=file_id_list)
