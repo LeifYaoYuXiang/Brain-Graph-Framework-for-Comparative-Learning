@@ -1,15 +1,14 @@
-from dgl.nn.pytorch import GraphConv
-from torch.nn import Linear
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import Dropout, Linear, LayerNorm
+
+from dgl.nn.pytorch import GraphConv
 from dgl.nn.pytorch.conv import GINConv
 from dgl.nn.pytorch.glob import SumPooling, AvgPooling, MaxPooling
 
+
 # Encoder 选择一：GCN
-from comparative_exp.graph_mlp.graph_mlp_cl import get_feature_dis
-
-
 class GCN(nn.Module):
     def __init__(self, in_feats, n_hidden, n_classes, n_layers,
                  node_each_graph,
@@ -161,9 +160,7 @@ class GIN(nn.Module):
         if not self.training:
             for i, h in enumerate(hidden_rep):
                 pooled_h = h.reshape(batch_size, -1)
-                # print(pooled_h.shape)
                 score_over_layer += self.drop(self.linears_prediction[i](pooled_h))
-            # print(score_over_layer.shape)
             return score_over_layer
         else:
             for i, h in enumerate(hidden_rep):
@@ -176,8 +173,7 @@ class GIN(nn.Module):
                     features = pooled_h_temp
                 else:
                     features = torch.cat((features, pooled_h_temp), 1)
-            features_dis = get_feature_dis(features)
-            return score_over_layer, features_dis
+            return score_over_layer
 
 
     def get_embedding(self, input):
@@ -201,3 +197,62 @@ class GIN(nn.Module):
         return embedding
 
 
+# Encoder 选择三： GraphMLP
+class MLPLayer(nn.Module):
+    def __init__(self, input_dim, hid_dim, dropout):
+        super(MLPLayer, self).__init__()
+        self.fc1 = Linear(input_dim, hid_dim)
+        self.fc2 = Linear(hid_dim, hid_dim)
+        self.act_fn = torch.nn.functional.gelu
+        self._init_weights()
+
+        self.dropout = Dropout(dropout)
+        self.layernorm = LayerNorm(hid_dim, eps=1e-6)
+
+    def _init_weights(self):
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.normal_(self.fc1.bias, std=1e-6)
+        nn.init.normal_(self.fc2.bias, std=1e-6)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.act_fn(x)
+        x = self.layernorm(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
+
+
+class MLP_Encoder(nn.Module):
+    def __init__(self, in_feats, n_hidden, n_layers, n_classes, node_each_graph, dropout):
+        super(MLP_Encoder, self).__init__()
+        self.n_hidden = n_hidden
+        self.node_each_graph = node_each_graph
+        self.layers = torch.nn.ModuleList()
+
+        for layer in range(n_layers - 1):
+            if layer == 0:
+                mlp = MLPLayer(in_feats, self.n_hidden, dropout)
+            else:
+                mlp = MLPLayer(self.n_hidden, self.n_hidden, dropout)
+            self.layers.append(mlp)
+        self.classifier = Linear(self.node_each_graph * self.n_hidden, n_classes)
+
+    def forward(self, input):
+        features = input[0]
+        batch_size = input[2]
+        for i, layer in enumerate(self.layers):
+            features = layer(features)
+        features = features.reshape(batch_size, self.node_each_graph * self.n_hidden)
+        class_feature = self.classifier(features)
+        class_logits = F.log_softmax(class_feature, dim=1)
+        return class_logits
+
+    def get_embedding(self, input):
+        features = input[0]
+        batch_size = input[2]
+        for i, layer in enumerate(self.layers):
+            features = layer(features)
+        features = features.reshape(batch_size, self.node_each_graph * self.n_hidden)
+        return features

@@ -1,4 +1,5 @@
 import os, json, joblib
+import pickle
 from random import sample
 
 import pandas as pd
@@ -12,19 +13,23 @@ from tqdm import trange
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler
 
+from util_encoder import NpEncoder
 
 config = ConfigParser()
 config.read('../parameters.ini', encoding='UTF-8')
 
+cv_info_path = config.get('abide_path_2', 'cv_info_path')
+voxel_dir_filepath = config.get('abide_path_2', 'voxel_dir')
+data_description_filepath = config.get('abide_path_2', 'data_description')
+file_id_label_path = config.get('abide_path_2', 'file_id_label_path')
+
+base_dir = config.get('abide_path_2', 'fc_matrix_dir')
+save_dir = config.get('abide_path_2', 'dataloader_dir')
 
 # 0: 71
 # 1：81
 def data_info_cv():
-    data_description_filepath = config.get('abide_path', 'data_description')
-    voxel_file_path = config.get('abide_path', 'voxel_dir')
-
     df = pd.read_csv(data_description_filepath)
-
     data_description = {}
     experiment_data_description = {}
     data_label_zero_list = []
@@ -38,7 +43,7 @@ def data_info_cv():
         else:
             label = 1
         data_description[FILE_ID] = label
-    file_name_list = os.listdir(voxel_file_path)
+    file_name_list = os.listdir(voxel_dir_filepath)
 
     for each_filename in file_name_list:
         filename = each_filename.split('.')[0]
@@ -57,7 +62,7 @@ def data_info_cv():
 # 生成k-fold的CV
 def k_fold_generate_data(k_fold_times,
                          data_label_one_list, data_label_two_list,
-                         label_one_number=73, label_two_number=73):
+                         label_one_number, label_two_number):
     cv_info_json = []
     sampled_data_label_one_list = sample(data_label_one_list, label_one_number)
     sampled_data_label_two_list = sample(data_label_two_list, label_two_number)
@@ -70,6 +75,40 @@ def k_fold_generate_data(k_fold_times,
             'test': X[test_index].tolist(),
         })
     return cv_info_json
+
+
+# 生成cv_info
+def generate_cv_info():
+    data_label_zero_list, data_label_one_list = data_info_cv()
+
+    cv_info = k_fold_generate_data(k_fold_times=5,
+                               data_label_one_list=data_label_zero_list,
+                               data_label_two_list=data_label_one_list,
+                               label_one_number=71, label_two_number=71)
+    # 写入
+    json_str = json.dumps(cv_info)
+    with open(cv_info_path, 'w') as json_file:
+        json_file.write(json_str)
+
+
+# 生成file_id_label
+def generate_file_id_label():
+    filepath_dict = {}
+    df = pd.read_csv(data_description_filepath)
+
+    filepath_list = os.listdir(voxel_dir_filepath)
+    for each_filepath in filepath_list:
+        if len(each_filepath.split('_')) == 4:
+            filename = each_filepath.split('_')[0] + '_' + each_filepath.split('_')[1]
+        else:
+            filename = each_filepath.split('_')[0] + '_' + each_filepath.split('_')[1] + '_' + each_filepath.split('_')[2]
+        file_label = df.loc[df['FILE_ID'] == filename]['DX_GROUP'].values[0]
+        filepath_dict[each_filepath] = file_label
+
+    json_str = json.dumps(filepath_dict, cls=NpEncoder)
+    with open(file_id_label_path, 'w') as json_file:
+        json_file.write(json_str)
+    print('FINISHED')
 
 
 # 加载批次数据
@@ -90,11 +129,12 @@ def load_raw_data(raw_data_txt_path_list, percent=0.1):
         # 生成DGL图结构
         graph = dgl.from_scipy(arr_sparse)
         # 生成DGL图的点特征
-        min_max_scaler = MinMaxScaler()
-
-        # 按行归一化
-        scaled_array = min_max_scaler.fit_transform(txt_array.T)
-        array = scaled_array.T
+        # 不做归一化
+        array = txt_array
+        # min_max_scaler = MinMaxScaler()
+        # # 按行归一化
+        # scaled_array = min_max_scaler.fit_transform(txt_array.T)
+        # array = scaled_array.T
 
         # 按列归一化
         # array = min_max_scaler.fit_transform(txt_array)
@@ -128,11 +168,7 @@ def generate_data_in_one_epoch(data, label, batch_size):
 
 def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
                           maximum_epoch_number, save_dir, cv_info, percent, batch_size):
-
-    voxel_dir_path = config.get('abide_path', 'voxel_dir')
-    file_name_list = os.listdir(voxel_dir_path)
-
-    file_id_label_path = config.get('abide_path', 'file_id_label_path')
+    file_name_list = os.listdir(voxel_dir_filepath)
     with open(file_id_label_path, 'r') as load_f:
         file_id_label_dict = json.load(load_f)
 
@@ -202,42 +238,26 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
 
 
 def main():
-    maximum_epoch_number = 200
+    maximum_epoch_number = 100
     percent = 0.1
-    batch_size = 8
-
-    base_dir = config.get('abide_path', 'fc_matrix_dir')
-    save_dir = config.get('abide_path', 'dataloader_dir')
-    cv_info_path = config.get('abide_path', 'cv_info_path')
+    batch_size = 10
 
     # 读取
     with open(cv_info_path, 'r') as load_f:
         cv_info = json.load(load_f)
-
     print('no_aug_no_aug')
     abide_data_preprocess('no_aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
     print('no_aug_ratio_sample')
     abide_data_preprocess('no_aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('no_aug_slide_window')
-    abide_data_preprocess('no_aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('aug_no_aug')
-    abide_data_preprocess('aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
-    print('aug_ratio_sample')
-    abide_data_preprocess('aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('no_aug_slide_window')
+    # abide_data_preprocess('no_aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('aug_no_aug')
+    # abide_data_preprocess('aug', 'no_aug', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
+    # print('aug_ratio_sample')
+    # abide_data_preprocess('aug', 'ratio_sample', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
     print('aug_slide_window')
     abide_data_preprocess('aug', 'slide_window', base_dir, maximum_epoch_number, save_dir, cv_info, percent, batch_size)
 
 
 if __name__ == '__main__':
-    # data_label_zero_list, data_label_one_list = data_info_cv()
-    # cv_info_path = config.get('abide_path', 'cv_info_path')
-    # cv_info = k_fold_generate_data(k_fold_times=5,
-    #                                data_label_one_list=data_label_zero_list,
-    #                                data_label_two_list=data_label_one_list,
-    #                                label_one_number=71, label_two_number=71)
-    # # 写入
-    # json_str = json.dumps(cv_info)
-    # with open(cv_info_path, 'w') as json_file:
-    #     json_file.write(json_str)
-
     main()
