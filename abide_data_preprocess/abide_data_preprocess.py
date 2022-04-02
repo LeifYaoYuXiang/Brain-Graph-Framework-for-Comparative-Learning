@@ -129,12 +129,12 @@ def load_raw_data(raw_data_txt_path_list, percent=0.1):
         # 生成DGL图结构
         graph = dgl.from_scipy(arr_sparse)
         # 生成DGL图的点特征
-        # 不做归一化
-        array = txt_array
-        # min_max_scaler = MinMaxScaler()
-        # # 按行归一化
-        # scaled_array = min_max_scaler.fit_transform(txt_array.T)
-        # array = scaled_array.T
+        # # 不做归一化
+        # array = txt_array
+        # # min_max_scaler = MinMaxScaler()
+        # 按行归一化
+        scaled_array = min_max_scaler.fit_transform(txt_array.T)
+        array = scaled_array.T
 
         # 按列归一化
         # array = min_max_scaler.fit_transform(txt_array)
@@ -238,7 +238,7 @@ def abide_data_preprocess(voxel_to_bold, bold_to_fc, base_dir,
 
 
 def main():
-    maximum_epoch_number = 100
+    maximum_epoch_number = 200
     percent = 0.1
     batch_size = 10
 
